@@ -200,8 +200,10 @@ void MyWorld::collisionHandling() {
         double vr = currContact.normal.dot(pdotA - pdotB);
         double j = -(1 + epsilon) * vr / (aDivisor + bDivisor);
         
-        updateMomentumWithImpulse(A, currContact.normal, j, rDeltaA);
-        updateMomentumWithImpulse(B, -1 * currContact.normal, j, rDeltaB);
+        if(vr < 0.0) {
+            updateMomentumWithImpulse(A, currContact.normal, j, rDeltaA);
+            updateMomentumWithImpulse(B, -1 * currContact.normal, j, rDeltaB);
+        }
     }
 }
 
