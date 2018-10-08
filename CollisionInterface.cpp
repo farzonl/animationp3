@@ -24,6 +24,20 @@ void CollisionInterface::addSkeleton(dart::dynamics::SkeletonPtr _skel) {
   }
 }
 
+void CollisionInterface::removeRigidBody(RigidBody *rb) {
+    mtx.lock();
+    //std::cout << "mContacts size: " << mContacts.size() << std::endl;
+    //std::cout << "mSkeletons size: " << mSkeletons.size() << std::endl;
+    //dart::dynamics::SkeletonPtr skel = mSkeletons.back();
+    //dart::dynamics::BodyNode* bn = skel->getBodyNode(0);
+    //bn->removeCollisionShape(rb->mShape);
+    //std::map<dart::dynamics::BodyNode*, RigidBody*>::iterator it = mNodeMap.find(bn);
+    //mNodeMap.erase (it);
+    //mSkeletons.pop_back();
+    //mContacts.pop_back();
+    mtx.unlock();
+}
+
 void CollisionInterface::addRigidBody(RigidBody *_rb, const std::string& name) {
   dart::dynamics::SkeletonPtr skel = dart::dynamics::Skeleton::create(name);
   dart::dynamics::FreeJoint::Properties properties;
@@ -44,6 +58,7 @@ void CollisionInterface::checkCollision() {
 }
 
 void CollisionInterface::updateBodyNodes() {
+  mtx.lock();
   for (std::map<dart::dynamics::BodyNode*, RigidBody*>::iterator it = mNodeMap.begin(); it != mNodeMap.end(); ++it) {
     dart::dynamics::BodyNode *bn = it->first;
     RigidBody *rb = it->second;
@@ -57,6 +72,7 @@ void CollisionInterface::updateBodyNodes() {
     bn->getSkeleton()->getJoint("freeJoint")->setTransformFromParentBodyNode(W);
     bn->getSkeleton()->computeForwardKinematics(true, false, false);
   }
+  mtx.unlock();
 }
 
 void CollisionInterface::postProcess() {

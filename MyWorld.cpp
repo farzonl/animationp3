@@ -32,6 +32,35 @@ MyWorld::MyWorld() {
     mRigidBodies.push_back(rb2);
 }
 
+void MyWorld::removeRigidBodies() {
+    if(mRigidBodies.size() > 2) {
+        mCollisionDetector->removeRigidBody(mRigidBodies.back());
+        mRigidBodies.pop_back();
+    }
+}
+
+float MyWorld::genRandNum() {
+    return 0.1f + (rand() % 90)/100.0f;
+}
+
+void MyWorld::addRigidBodies() {
+    std::string shapeStr = "box";
+    RigidBody *rb = nullptr;
+    if (rand() % 2 == 0) {
+        shapeStr = "ellipse";
+        rb = new RigidBody(dart::dynamics::Shape::ELLIPSOID, Vector3d(0.06, 0.06, 0.06));
+    } else {
+        rb = new RigidBody(dart::dynamics::Shape::BOX, Vector3d(0.05, 0.05, 0.05));
+    }
+    mCollisionDetector->addRigidBody(rb, shapeStr); // Put rb in collision detector
+    rb->mPosition[0] = -.5 + genRandNum();
+    rb->mPosition[1] = -.1 - genRandNum();
+    rb->mAngMomentum = Vector3d(rand()%1/10.f, rand()%1/10.f, rand()%1/10.f);
+    rb->mColor = Vector4d(genRandNum(), genRandNum(),
+                          genRandNum(), genRandNum());
+    mRigidBodies.push_back(rb);
+}
+
 void MyWorld::initializePinata() {
     // Add pinata to the collison detector
     mCollisionDetector->addSkeleton(mPinataWorld->getSkeleton(0));
@@ -136,6 +165,7 @@ void MyWorld::collisionHandling() {
     // TODO: handle the collision events
     
     int nContacts = mCollisionDetector->getNumContacts(); // Get all the contacts so we can loop over them
+    //std::cout << "n# contacts: " << nContacts << std::endl;
     for (int i = 0; i < nContacts; i++) {
         // Get the ith contact
         RigidContact currContact = mCollisionDetector->getContact(i);
@@ -143,6 +173,11 @@ void MyWorld::collisionHandling() {
         RigidBody* B = currContact.rb2;
         bool AisNotPinata = A? true : false;
         bool BisNotPinata = B? true : false;
+        
+        if(!AisNotPinata && !BisNotPinata) {
+            continue;
+        }
+        
         double aDivisor = 0.0;
         double bDivisor = 0.0;
         Eigen::Vector3d pdotA = currContact.pinataVelocity;
@@ -153,17 +188,27 @@ void MyWorld::collisionHandling() {
             rDeltaA = computeRDelta(A, currContact);
             aDivisor = computeEpsilonDevisorbyRb(A, currContact, rDeltaA);
             pdotA = computePdot(A, rDeltaA);
+            //std::cout << "A ang Momentum pre impulse:" << A->mAngMomentum << std::endl;
+           
         }
         if(BisNotPinata) {
             rDeltaB = computeRDelta(B, currContact);
             bDivisor = computeEpsilonDevisorbyRb(B, currContact, rDeltaB);
             pdotB = computePdot(B, rDeltaB);
+             //std::cout << "B ang Momentum pre impulse:" << B->mAngMomentum << std::endl;
         }
         //vr=ˆn(tc) dot (pdotA(t0) − ̇pdotB(t0))
         double vr = currContact.normal.dot(pdotA - pdotB);
         double j = -(1 + epsilon) * vr / (aDivisor + bDivisor);
-        updateMomentumWithImpulse(A, currContact, j, rDeltaA);
-        updateMomentumWithImpulse(B, currContact, j, rDeltaB);
+        
+        updateMomentumWithImpulse(A, currContact.normal, j, rDeltaA);
+        updateMomentumWithImpulse(B, -1 * currContact.normal, j, rDeltaB);
+        /*if(AisNotPinata) {
+            std::cout << "A ang Momentum post impulse:" << A->mAngMomentum << std::endl;
+        }
+        if(BisNotPinata) {
+            std::cout << "B ang Momentum post impulse:" << B->mAngMomentum << std::endl;
+        }*/
     }
 }
 
@@ -215,11 +260,11 @@ Eigen::Vector3d MyWorld::computePdot(RigidBody* rBody, Eigen::Vector3d &rDelta) 
     return rBody->mLinVelocity + rBody->mAngVelocity.cross(rDelta);
 }
 
-void MyWorld::updateMomentumWithImpulse(RigidBody* rBody, RigidContact &contact,
+void MyWorld::updateMomentumWithImpulse(RigidBody* rBody, Eigen::Vector3d normal,
                                double j, Eigen::Vector3d &rDelta) {
     if (rBody) {
         // J: Impulse ConstrRigid.pdf pg. 34
-        Eigen::Vector3d J = j * contact.normal;
+        Eigen::Vector3d J = j * normal;
         Eigen::Vector3d torqueJ = rDelta.cross(J); //torque impulse
         //Finally, apply the change in linear momentum and angular momentum to the current state
         rBody->mLinMomentum += J;

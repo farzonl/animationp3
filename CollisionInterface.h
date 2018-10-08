@@ -5,7 +5,7 @@
 #include <map>
 #include <Eigen/Dense>
 #include "dart/dart.h"
-
+#include <mutex>          // std::mutex
 
 class RigidBody;
 
@@ -27,6 +27,7 @@ class CollisionInterface {
 
   void addSkeleton(dart::dynamics::SkeletonPtr _skel);
   void addRigidBody(RigidBody *_rb, const std::string& name);
+  void removeRigidBody(RigidBody *_rb);
 
   // Run the collision detector
   void checkCollision();
@@ -44,6 +45,7 @@ class CollisionInterface {
   }
 
  private:
+  std::mutex mtx;
   void updateBodyNodes();
   void postProcess();
 

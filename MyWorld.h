@@ -47,9 +47,11 @@ class MyWorld {
 	dart::simulation::WorldPtr getPinataWorld() {
 		return mPinataWorld;
 	}
-    
-    void updateMomentumWithImpulse(RigidBody* rBody, RigidContact &contact,
+    void addRigidBodies();
+    void removeRigidBodies();
+    void updateMomentumWithImpulse(RigidBody* rBody, Eigen::Vector3d normal,
                                             double j, Eigen::Vector3d &rDelta);
+    static float genRandNum();
     static Eigen::Vector3d computeRDelta(RigidBody * rBody, RigidContact &contact);
     static void updateInertialTensor(RigidBody* rBody);
     static void updateAngularVelocity(RigidBody* rBody);
