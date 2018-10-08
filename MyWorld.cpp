@@ -188,27 +188,20 @@ void MyWorld::collisionHandling() {
             rDeltaA = computeRDelta(A, currContact);
             aDivisor = computeEpsilonDevisorbyRb(A, currContact, rDeltaA);
             pdotA = computePdot(A, rDeltaA);
-            //std::cout << "A ang Momentum pre impulse:" << A->mAngMomentum << std::endl;
-           
         }
+        
         if(BisNotPinata) {
             rDeltaB = computeRDelta(B, currContact);
             bDivisor = computeEpsilonDevisorbyRb(B, currContact, rDeltaB);
             pdotB = computePdot(B, rDeltaB);
-             //std::cout << "B ang Momentum pre impulse:" << B->mAngMomentum << std::endl;
         }
+
         //vr=ˆn(tc) dot (pdotA(t0) − ̇pdotB(t0))
         double vr = currContact.normal.dot(pdotA - pdotB);
         double j = -(1 + epsilon) * vr / (aDivisor + bDivisor);
         
         updateMomentumWithImpulse(A, currContact.normal, j, rDeltaA);
         updateMomentumWithImpulse(B, -1 * currContact.normal, j, rDeltaB);
-        /*if(AisNotPinata) {
-            std::cout << "A ang Momentum post impulse:" << A->mAngMomentum << std::endl;
-        }
-        if(BisNotPinata) {
-            std::cout << "B ang Momentum post impulse:" << B->mAngMomentum << std::endl;
-        }*/
     }
 }
 
