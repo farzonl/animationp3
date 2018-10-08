@@ -157,10 +157,10 @@ void MyWindow::keyboard(unsigned char key, int x, int y)
   case '4': // Hit the pinata from the back
     mWorld->setExtForce(2, 500.0);
     break;
-  case 'd':
+  case 'a':
     mWorld->addRigidBodies();
     break;
-  case 'f':
+  case 'd':
     mWorld->removeRigidBodies();
     break;
 
